@@ -1,6 +1,6 @@
 # HSMFNet: Hierarchical Semantic-Guided Multi-Scale Fusion Network
 
-Official PyTorch implementation of **"HSMFNet: A Hierarchical Semantic-Guided Multi-Scale Fusion Network for Fine-Grained Ship Classification in Remote Sensing Images"**.
+Implementation of **"HSMFNet: A Hierarchical Semantic-Guided Multi-Scale Fusion Network for Fine-Grained Ship Classification in Remote Sensing Images"**.
 
 ## Repository Structure
 
@@ -57,8 +57,8 @@ HSMFNet/
 
 ## Requirements
 
-- Python 3.8+
-- PyTorch 2.0+
+- Python
+- PyTorch
 - timm
 - torchvision
 - tqdm
