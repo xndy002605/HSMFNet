@@ -898,28 +898,56 @@ class SG(nn.Module):
 
 
 
-class SGCA(nn.Module):
+class CrossAttention(nn.Module):
 	def __init__(self, d_model, n_heads=8):
-
+		"""
+        初始化 Cross Attention 模块
+        参数:
+            d_model: 输入的特征维度
+            n_heads: 多头注意力的头数
+        """
 		super(CrossAttention, self).__init__()
-		assert d_model % n_heads == 0,
+		assert d_model % n_heads == 0, "d_model 必须能被 n_heads 整除"
 
 		self.d_model = d_model
 		self.n_heads = n_heads
-		self.d_k = d_model // n_heads
-		self.W_q = nn.Linear(d_model, d_model)
-		self.W_k = nn.Linear(d_model, d_model)
-		self.W_v = nn.Linear(d_model, d_model)
-		self.W_o = nn.Linear(d_model, d_model)
+		self.d_k = d_model // n_heads  # 每个头的维度
 
-	def forward(self, query, kv, mask=None):
-
+		# 定义 Q、K、V 的线性变换层
+		self.W_q = nn.Linear(d_model, d_model)  # Query 的线性变换
+		self.W_k = nn.Linear(d_model, d_model)  # Key 的线性变换
+		self.W_v = nn.Linear(d_model, d_model)  # Value 的线性变换
+		self.W_o = nn.Linear(d_model, d_model)  # 输出线性变换
+		self.ca = CAM(d_model,16)
+		self.sa = SAM()
+		def forward(self, query, kv, mask=None):
+		"""
+        前向传播
+        参数:
+            query: 查询序列，形状 [batch_size, query_len, d_model]
+            key: 键序列，形状 [batch_size, key_len, d_model]
+            value: 值序列，形状 [batch_size, key_len, d_model]
+            mask: 可选的注意力掩码，形状 [batch_size, query_len, key_len]
+        返回:
+            输出: 经过 Cross Attention 的结果，形状 [batch_size, query_len, d_model]
+        """
 		H=query.size(2)
 		W=query.size(3)
+		q = self.ca(query)
+		k = self.sa(kv)
+		v = self.sa(kv)
 
 		key = rearrange(kv, 'b c h w -> b (h w) c')
 		value = rearrange(kv, 'b c h w -> b (h w) c')
 		query = rearrange(query, 'b c h w -> b (h w) c')
+		k = rearrange(k, 'b c h w -> b (h w) c')
+		v = rearrange(v, 'b c h w -> b (h w) c')
+		q = rearrange(q, 'b c h w -> b (h w) c')
+
+		key = 0*k + key
+		value = 0*v + value
+		query = 0*q + query
+
 		batch_size = query.size(0)
 
 		Q = self.W_q(query)
@@ -942,4 +970,4 @@ class SGCA(nn.Module):
 
 		output = rearrange(output, 'b (h w) c -> b c h w',h=H,w=W)
 
-		return output
+		return output  # 返回输出和注意力权重（用于可视化或调试）
