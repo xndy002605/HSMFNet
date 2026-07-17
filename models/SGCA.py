@@ -918,8 +918,7 @@ class CrossAttention(nn.Module):
 		self.W_k = nn.Linear(d_model, d_model)  # Key 的线性变换
 		self.W_v = nn.Linear(d_model, d_model)  # Value 的线性变换
 		self.W_o = nn.Linear(d_model, d_model)  # 输出线性变换
-		self.ca = CAM(d_model,16)
-		self.sa = SAM()
+		
 		def forward(self, query, kv, mask=None):
 		"""
         前向传播
@@ -933,23 +932,11 @@ class CrossAttention(nn.Module):
         """
 		H=query.size(2)
 		W=query.size(3)
-		q = self.ca(query)
-		k = self.sa(kv)
-		v = self.sa(kv)
 
 		key = rearrange(kv, 'b c h w -> b (h w) c')
 		value = rearrange(kv, 'b c h w -> b (h w) c')
 		query = rearrange(query, 'b c h w -> b (h w) c')
-		k = rearrange(k, 'b c h w -> b (h w) c')
-		v = rearrange(v, 'b c h w -> b (h w) c')
-		q = rearrange(q, 'b c h w -> b (h w) c')
-
-		key = 0*k + key
-		value = 0*v + value
-		query = 0*q + query
-
 		batch_size = query.size(0)
-
 		Q = self.W_q(query)
 		K = self.W_k(key)
 		V = self.W_v(value)
